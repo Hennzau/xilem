@@ -9,7 +9,6 @@ use std::sync::mpsc::Sender;
 use std::sync::{Arc, mpsc};
 
 use accesskit_winit::Adapter;
-use copypasta::{ClipboardContext, ClipboardProvider};
 use masonry_core::app::{RenderRoot, RenderRootOptions, RenderRootSignal, WindowSizePolicy};
 use masonry_core::core::keyboard::{Key, KeyState};
 use masonry_core::core::{
@@ -172,8 +171,6 @@ pub struct MasonryState<'a> {
     surfaces: HashMap<HandleId, RenderSurface<'a>>,
     windows: HashMap<HandleId, Window>,
 
-    clipboard_cx: ClipboardContext,
-
     // Is `Some` if the most recently displayed frame was an animation frame.
     last_anim: Option<Instant>,
     signal_receiver: mpsc::Receiver<(WindowId, RenderRootSignal)>,
@@ -334,9 +331,8 @@ impl MasonryState<'_> {
             windows: HashMap::new(),
             surfaces: HashMap::new(),
 
-            clipboard_cx: ClipboardContext::new().unwrap(),
-
             signal_sender,
+
             default_properties: Arc::new(default_properties),
             exit: false,
             new_windows,
@@ -613,11 +609,6 @@ impl MasonryState<'_> {
                         && action_mod
                         && k.state == KeyState::Down
                     {
-                        window
-                            .render_root
-                            .handle_text_event(TextEvent::ClipboardPaste(
-                                self.clipboard_cx.get_contents().unwrap(),
-                            ));
                     } else {
                         window.render_root.handle_text_event(TextEvent::Keyboard(k));
                     }
@@ -807,8 +798,8 @@ impl MasonryState<'_> {
                 RenderRootSignal::ImeMoved(position, size) => {
                     handle.set_ime_cursor_area(position, size);
                 }
-                RenderRootSignal::ClipboardStore(text) => {
-                    self.clipboard_cx.set_contents(text).unwrap();
+                RenderRootSignal::ClipboardStore(_text) => {
+                    // self.clipboard_cx.set_contents(text).unwrap();
                 }
                 RenderRootSignal::RequestRedraw => {
                     need_redraw.insert(*handle_id);
